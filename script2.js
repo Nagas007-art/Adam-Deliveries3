@@ -9,6 +9,7 @@
 // Replace with your WhatsApp number in international format (no +, no leading 0).
 // Example Ghana mobile: 23355xxxxxxx
 const WHATSAPP_NUMBER = "233509104421";
+const WHATSAPP_NUMBER = "233550040470";
 
 /* ------------- App state ------------- */
 let currentRequest = null; // will hold form data before pick rider
