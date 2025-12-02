@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ad-Nag Delivery Service</title>
+  
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- NAV / BRAND -->
+    <header class="app-header">
+      
+      <div class="brand">Ad-Nag Delivery Service</div>
+    </header>
+
+    <!-- PAGES CONTAINER -->
+    <main id="pages">
+      <!-- PAGE: Welcome -->
+      <section id="page-welcome" class="page active">
+    <div class="welcome-bg"></div>
+
+    <div class="welcome-inner">
+      <img src="images/Logo.png" alt="Ad-Nag Logo" id="welcomeLogo">
+      <h2 class="welcome-sub">Fast • Reliable • Local</h2>
+      <button class="btn primary" id="startBtn">Send a Rider</button>
+    </div>
+  </section>
+
+      <!-- PAGE: Services (with dropdowns) -->
+      <section id="page-services" class="page">
+        <div class="page-top">
+          <button class="back" data-to="page-welcome">← Home</button>
+          <h2>Choose a Service</h2>
+        </div>
+
+        <ul class="services-list">
+          <li class="service">
+            <button class="service-toggle" data-toggle="businessSub">Business Errands ▾</button>
+            <ul id="businessSub" class="sublist">
+              <li class="subitem" id="documentPickup">Document Pickup</li>
+            </ul>
+          </li>
+
+          <li class="service">
+            <button class="service-toggle" data-toggle="personalSub">Personal Errands ▾</button>
+            <ul id="personalSub" class="sublist">
+              <li class="subitem" data-personal="Food Errands">Food Errands</li>
+              <li class="subitem" data-personal="Grocery Shopping">Grocery Shopping</li>
+              <li class="subitem" data-personal="Pick & Drop">Pick & Drop</li>
+            </ul>
+          </li>
+
+          <li class="service">
+            <button class="service-btn" id="parcelBtn">Parcel Pickup</button>
+          </li>
+        </ul>
+      </section>
+
+      <!-- PAGE: Forms (Business / Personal / Parcel) -->
+      <section id="page-form" class="page">
+        <div class="page-top">
+          <button class="back" data-to="page-services">← Back</button>
+          <h2 id="formTitle">Form</h2>
+        </div>
+
+        <form id="mainForm" class="form-card">
+          <!-- dynamic fields area -->
+          <div id="formFields"></div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary">Continue (Pick Rider)</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- PAGE: Riders List -->
+      <section id="page-riders" class="page">
+        <div class="page-top">
+          <button class="back" data-to="page-form">← Back</button>
+          <h2>Pick a Rider</h2>
+        </div>
+
+        <div id="ridersList" class="riders-grid">
+          <!-- rendered by JS -->
+        </div>
+      </section>
+
+      <!-- PAGE: Confirmation (after sending WhatsApp) -->
+      <section id="page-done" class="page">
+        <div class="center-box">
+          <h2>Order sent</h2>
+          <p class="muted">WhatsApp should open with your order. Thank you!</p>
+          <button class="btn" data-to="page-welcome">Back to Home</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- footer / small hint -->
+    <footer class="app-footer">© Ad-Nag Delivery Service</footer>
+  </div>
+
+  <script src="script2.js"></script>
+</body>
+</html>
