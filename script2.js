@@ -170,7 +170,7 @@ function buildParcelForm() {
 const RIDERS = [
   { id: 'r1', name: 'Muftawu Adam', phone: '233509104421', rating: 4.8 },
   { id: 'r2', name: 'Mohammed Muftawu', phone: '233550040470', rating: 4.6 },
-  { id: 'r3', name: 'Adam Nagas', phone: '233571564634', rating: 4.9 }
+ 
 ];
 
 function renderRiders() {
