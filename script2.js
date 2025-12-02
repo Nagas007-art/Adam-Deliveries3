@@ -8,7 +8,7 @@
 /* ------------- Config ------------- */
 // Replace with your WhatsApp number in international format (no +, no leading 0).
 // Example Ghana mobile: 23355xxxxxxx
-const WHATSAPP_NUMBER = "233509104421"; // <-- CHANGE THIS to your number
+const WHATSAPP_NUMBER = "233509104421";
 
 /* ------------- App state ------------- */
 let currentRequest = null; // will hold form data before pick rider
@@ -168,10 +168,9 @@ function buildParcelForm() {
 
 /* Sample riders data (you can replace with real riders) */
 const RIDERS = [
-  { id: 'r1', name: 'Muftawu Adam', phone: '233509104421', rating: 4.8 },
-  { id: 'r2', name: 'Mohammed Muftawu', phone: '233550040470', rating: 4.6 },
- 
-];
+  { id: 'r1', name: 'Muftawu Adam', phone: '233509104421',},
+  { id: 'r2', name: 'Mohammed Muftawu', phone: '233550040470',},
+  ];
 
 function renderRiders() {
   const container = document.getElementById('ridersList');
@@ -210,7 +209,7 @@ function sendOrderToWhatsApp(rider) {
 
   // Build readable message
   const lines = [];
-  lines.push('Hello, I would like to place an order via Ad-Nag Delivery Service:');
+  lines.push('Hello, I would like to place an order:');
   lines.push('');
   lines.push('Service details:');
   Object.entries(currentRequest.fields).forEach(([k,v]) => {
@@ -222,7 +221,7 @@ function sendOrderToWhatsApp(rider) {
   lines.push('');
   lines.push(`Selected Rider: ${rider.name} (phone: ${rider.phone})`);
   lines.push('');
-  lines.push('Please confirm and send how much I should pay / next steps.');
+  lines.push('Please confirm and send how much I should pay.');
 
   const message = encodeURIComponent(lines.join('\n'));
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
