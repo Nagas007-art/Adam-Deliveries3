@@ -3,7 +3,7 @@ const WHATSAPP_NUMBER = "233509104421";
 
 /* Location pricing (base values) */
 const LOCATIONS = {
-  "Takoradi": 5,
+  "Town": 5,
   "Market Circle": 5,
   "Beach Road": 10,
   "Chapel Hill": 10,
