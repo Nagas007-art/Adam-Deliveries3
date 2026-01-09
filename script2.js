@@ -1,234 +1,209 @@
-/* script.js for Ad-Nag Delivery Service
-   - Handles slide navigation
-   - toggles dropdowns
-   - builds forms dynamically
-   - shows riders list and sends WhatsApp message
-*/
-
-/* ------------- Config ------------- */
-// Replace with your WhatsApp number in international format (no +, no leading 0).
-// Example Ghana mobile: 23355xxxxxxx
+/* ================= CONFIG ================= */
 const WHATSAPP_NUMBER = "233509104421";
 
-/* ------------- App state ------------- */
-let currentRequest = null; // will hold form data before pick rider
+/* Location pricing (base prices) */
+const LOCATIONS = {
+  "Takoradi": 10,
+  "Market Circle": 10,
+  "Effiakuma": 15,
+  "Anaji": 20,
+  "Apremdo": 20,
+  "Kojokrom": 30,
+  "Kwesimintsim": 20,
+  "Sekondi": 30,
+  "Shama": 60
+};
 
-/* ------------- Helper: navigation (slide) ------------- */
-function showPage(targetId) {
-  // remove active from current
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  // add active to target
-  const el = document.getElementById(targetId);
-  if (el) el.classList.add('active');
-  window.scrollTo(0,0);
+/* Riders */
+const RIDERS = [
+  { id: "r1", name: "Muftawu Adam", phone: "233509104421" },
+  { id: "r2", name: "Mohammed Muftawu", phone: "233550040470" }
+];
+
+/* App state */
+let currentRequest = null;
+
+/* ================= NAVIGATION ================= */
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0, 0);
 }
 
-/* initial button wiring */
-document.addEventListener('DOMContentLoaded', () => {
-  // Start button
-  document.getElementById('startBtn').addEventListener('click', () => showPage('page-services'));
+/* ================= INIT ================= */
+document.addEventListener("DOMContentLoaded", () => {
 
-  // Back buttons (data-to)
-  document.querySelectorAll('.back').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const to = e.currentTarget.getAttribute('data-to');
-      if (to) showPage(to);
-    });
+  document.getElementById("startBtn").onclick =
+    () => showPage("page-services");
+
+  document.querySelectorAll(".back").forEach(btn => {
+    btn.onclick = () => showPage(btn.dataset.to);
   });
 
-  // Service toggles (open/close sublist)
-  document.querySelectorAll('.service-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.getAttribute('data-toggle');
-      const sub = document.getElementById(id);
-      sub.style.display = sub.style.display === 'block' ? 'none' : 'block';
-    });
+  document.querySelectorAll(".service-toggle").forEach(btn => {
+    btn.onclick = () => {
+      const sub = document.getElementById(btn.dataset.toggle);
+      sub.style.display = sub.style.display === "block" ? "none" : "block";
+    };
   });
 
-  // connect subitems & buttons to form builds
-  document.getElementById('documentPickup').addEventListener('click', () => {
+  document.getElementById("documentPickup").onclick = () => {
     buildBusinessForm();
-    showPage('page-form');
-  });
+    showPage("page-form");
+  };
 
-  document.getElementById('parcelBtn').addEventListener('click', () => {
+  document.getElementById("parcelBtn").onclick = () => {
     buildParcelForm();
-    showPage('page-form');
+    showPage("page-form");
+  };
+
+  document.querySelectorAll("#personalSub .subitem").forEach(item => {
+    item.onclick = () => {
+      buildPersonalForm(item.dataset.personal);
+      showPage("page-form");
+    };
   });
 
-  // personal subitems (they are many but share same personal form)
-  document.querySelectorAll('#personalSub .subitem').forEach(node => {
-    node.addEventListener('click', () => {
-      const serviceName = node.getAttribute('data-personal') || 'Personal Errand';
-      buildPersonalForm(serviceName);
-      showPage('page-form');
-    });
-  });
-
-  // Form submit
-  document.getElementById('mainForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    // read inputs from formFields area
-    const fields = Array.from(document.querySelectorAll('#formFields [name]'));
-    const data = {};
-    fields.forEach(f => {
-      if(f.type === 'file') {
-        // we cannot send files over wa.me; just note if file selected
-        data[f.name] = f.files && f.files.length ? 'receipt_attached' : '';
-      } else {
-        data[f.name] = f.value.trim();
-      }
-    });
-
-    // store request state
-    currentRequest = { timestamp: Date.now(), fields: data };
-    // go pick rider
-    renderRiders();
-    showPage('page-riders');
-  });
-
-  // riders selection will be wired by renderRiders()
+  document.getElementById("mainForm").onsubmit = submitForm;
 });
 
-/* ------------- Form builders ------------- */
-
-function clearFormArea() {
-  document.getElementById('formTitle').innerText = 'Form';
-  const area = document.getElementById('formFields');
-  area.innerHTML = '';
+/* ================= FORM BUILDERS ================= */
+function locationOptions() {
+  return Object.keys(LOCATIONS)
+    .map(l => `<option value="${l}">${l}</option>`)
+    .join("");
 }
 
-// Business form
 function buildBusinessForm() {
-  clearFormArea();
-  document.getElementById('formTitle').innerText = 'Business Errand - Document Pickup';
-  const area = document.getElementById('formFields');
-
-  area.innerHTML = `
+  document.getElementById("formTitle").innerText = "Business Errand – Document Pickup";
+  document.getElementById("formFields").innerHTML = `
     <label>Receiver Name</label>
-    <input name="receiverName" type="text" required>
-
-    <label>Receiver Location</label>
-    <input name="receiverLocation" type="text" required>
-
-    <label>Receiver Number</label>
-    <input name="receiverPhone" type="tel" required>
-
-    <label>Notes (optional)</label>
-    <textarea name="notes" placeholder="Extra info..."></textarea>
-  `;
-}
-
-// Personal form (parameterized)
-function buildPersonalForm(serviceName = 'Personal Errand') {
-  clearFormArea();
-  document.getElementById('formTitle').innerText = serviceName;
-  const area = document.getElementById('formFields');
-
-  area.innerHTML = `
-    <label>Pickup / Delivery Location</label>
-    <input name="location" type="text" required>
-
-    <label>Your Phone Number</label>
-    <input name="phone" type="tel" required>
-
-    <label>Notes (optional)</label>
-    <textarea name="notes" placeholder="Item description, food details or address notes..."></textarea>
-  `;
-}
-
-// Parcel form
-function buildParcelForm() {
-  clearFormArea();
-  document.getElementById('formTitle').innerText = 'Parcel Pickup';
-  const area = document.getElementById('formFields');
-
-  area.innerHTML = `
-    <label>Driver Number</label>
-    <input name="driverNumber" type="text" required>
-
-    <label>Car Number</label>
-    <input name="carNumber" type="text" required>
-
-    <label>Receiver Name</label>
-    <input name="receiverName" type="text" required>
+    <input name="receiverName" required>
 
     <label>Receiver Phone</label>
     <input name="receiverPhone" type="tel" required>
 
-    <label>Upload Receipt (STC) (optional)</label>
-    <input name="receipt" type="file" accept="image/*">
+    <label>Pickup Location</label>
+    <select name="from" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
 
-    <label>Notes (optional)</label>
-    <textarea name="notes" placeholder="Extra info..."></textarea>
+    <label>Delivery Location</label>
+    <select name="to" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
   `;
 }
 
-/* ------------- Riders & WhatsApp flow ------------- */
+function buildPersonalForm(service) {
+  document.getElementById("formTitle").innerText = service;
+  document.getElementById("formFields").innerHTML = `
+    <label>Your Phone</label>
+    <input name="customerPhone" type="tel" required>
 
-/* Sample riders data (you can replace with real riders) */
-const RIDERS = [
-  { id: 'r1', name: 'Muftawu Adam', phone: '233509104421',},
-  { id: 'r2', name: 'Mohammed Muftawu', phone: '233550040470',},
-  ];
+    <label>Pickup Location</label>
+    <select name="from" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
 
-function renderRiders() {
-  const container = document.getElementById('ridersList');
-  container.innerHTML = '';
-  RIDERS.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'rider-card';
-    card.innerHTML = `
-      <div class="rider-avatar">${r.name.split(' ').map(x=>x[0]).slice(0,2).join('')}</div>
-      <div class="rider-meta">
-        <h4>${r.name}</h4>
-        <p>Phone: ${r.phone}</p>
-        <p>Rating: ${r.rating}</p>
-      </div>
-      <div>
-        <button class="btn primary pick" data-id="${r.id}">Pick Rider</button>
-      </div>
-    `;
-    container.appendChild(card);
+    <label>Delivery Location</label>
+    <select name="to" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
+  `;
+}
+
+function buildParcelForm() {
+  document.getElementById("formTitle").innerText = "Parcel Pickup";
+  document.getElementById("formFields").innerHTML = `
+    <label>Driver Number</label>
+    <input name="driverNumber" required>
+
+    <label>Car Number</label>
+    <input name="carNumber" required>
+
+    <label>Receiver Name</label>
+    <input name="receiverName" required>
+
+    <label>Receiver Phone</label>
+    <input name="receiverPhone" type="tel" required>
+
+    <label>Pickup Location</label>
+    <select name="from" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
+
+    <label>Delivery Location</label>
+    <select name="to" required>
+      <option value="">Select</option>${locationOptions()}
+    </select>
+  `;
+}
+
+/* ================= FORM SUBMIT ================= */
+function submitForm(e) {
+  e.preventDefault();
+
+  const fields = {};
+  document.querySelectorAll("#formFields [name]").forEach(f => {
+    fields[f.name] = f.value;
   });
 
-  // wire pick buttons
-  container.querySelectorAll('.pick').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const id = e.currentTarget.getAttribute('data-id');
-      const rider = RIDERS.find(r=>r.id===id);
-      if(!rider){ alert('Rider not found'); return; }
-      sendOrderToWhatsApp(rider);
-    });
+  const price = LOCATIONS[fields.from] + LOCATIONS[fields.to];
+
+  currentRequest = {
+    service: document.getElementById("formTitle").innerText,
+    from: fields.from,
+    to: fields.to,
+    fields,
+    price
+  };
+
+  renderRiders();
+  showPage("page-riders");
+}
+
+/* ================= RIDERS ================= */
+function renderRiders() {
+  const list = document.getElementById("ridersList");
+  list.innerHTML = "";
+
+  RIDERS.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "rider-card";
+    card.innerHTML = `
+      <div class="rider-avatar">${r.name.split(" ").map(x=>x[0]).join("")}</div>
+      <div class="rider-meta">
+        <h4>${r.name}</h4>
+        <p>${r.phone}</p>
+      </div>
+      <button class="btn primary">Pick Rider</button>
+    `;
+    card.querySelector("button").onclick = () => sendWhatsApp(r);
+    list.appendChild(card);
   });
 }
 
-/* Build and open WhatsApp message */
-function sendOrderToWhatsApp(rider) {
-  if(!currentRequest){ alert('No request found'); return; }
+/* ================= WHATSAPP ================= */
+function sendWhatsApp(rider) {
+  const msg = `
+AD-NAG DELIVERY SERVICE
 
-  // Build readable message
-  const lines = [];
-  lines.push('Hello, I would like to place an order:');
-  lines.push('');
-  lines.push('Service details:');
-  Object.entries(currentRequest.fields).forEach(([k,v]) => {
-    if(!v) return;
-    // friendly label
-    const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-    lines.push(`- ${label}: ${v}`);
-  });
-  lines.push('');
-  lines.push(`Selected Rider: ${rider.name} (phone: ${rider.phone})`);
-  lines.push('');
-  lines.push('Please confirm and send how much I should pay.');
+Service: ${currentRequest.service}
+Pickup: ${currentRequest.from}
+Delivery: ${currentRequest.to}
+Price: GHS ${currentRequest.price}
 
-  const message = encodeURIComponent(lines.join('\n'));
-  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+Rider: ${rider.name}
+Phone: ${rider.phone}
 
-  // open whatsapp
-  window.open(waUrl, '_blank');
+Please confirm this order.
+`;
 
-  // go to done page
-  showPage('page-done');
+  window.open(
+    `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`,
+    "_blank"
+  );
+
+  showPage("page-done");
 }
